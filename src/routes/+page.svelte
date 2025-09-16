@@ -1,7 +1,66 @@
 <script>
-    import { goto } from '$app/navigation';
-    // Svelte 5 runes for reactive state
-    let count = $state(1);
+	import { PUBLIC_RAZORPAY_KEY_ID } from '$env/static/public';
+
+	// The `form` prop contains the data returned from our form action. [cite: 188]
+	let { form } = $props();
+
+	// When the `form` prop updates with a successful order, open the checkout.
+	$effect(() => {
+		if (form?.success && form.order) {
+			const order = form.order;
+
+			const options = {
+				key: PUBLIC_RAZORPAY_KEY_ID, // Your public key ID
+				amount: order.amount,
+				currency: order.currency,
+				name: 'SvelteKit Store',
+				description: 'Test Payment',
+				order_id: order.id,
+				// This handler function is called after payment
+				handler: async (response) => {
+					try {
+						const res = await fetch('/verify-payment', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json'
+							},
+							body: JSON.stringify({
+								razorpay_order_id: response.razorpay_order_id,
+								razorpay_payment_id: response.razorpay_payment_id,
+								razorpay_signature: response.razorpay_signature
+							})
+						});
+
+						const result = await res.json();
+						if (result.status === 'ok') {
+							window.location.href = '/payment-success'; // Redirect on success
+						} else {
+							alert('Payment verification failed. Please try again.');
+						}
+					} catch (err) {
+						console.error('Verification request failed:', err);
+						alert('An error occurred during payment verification.');
+					}
+				},
+				prefill: {
+					name: 'Svelte Developer',
+					email: 'dev@svelte.dev',
+					contact: '9999999999'
+				},
+				theme: {
+					color: '#F37254'
+				}
+			};
+
+			const rzp = new Razorpay(options);
+			rzp.open();
+		} else if (form && !form.success) {
+			alert(form.message || 'An unknown error occurred.');
+		}
+	});
+
+	// COUNTER
+	let count = $state(1);
     let isShaking = $state(false);
     let isPopping = $state(false);
 
@@ -10,7 +69,7 @@
     // These can be adjusted as needed
     const minValue = 1;
     const maxValue = 5;
-    let totalPrice = $derived(count * price);
+    let amount = $derived(count * price);
     // A helper function to trigger animations by quickly toggling state
     function triggerAnimation(animationStateSetter) {
         animationStateSetter.value = true;
@@ -38,25 +97,37 @@
     }
 </script>
 
+<svelte:head>
+	<title>Razorpay Payment</title>
+	<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</svelte:head>
+
+<!-- <h1>Razorpay Payment Gateway Integration</h1> -->
+
+
 <div class="product-card">
     <h2>Select Quantity</h2>
-    
-    <div class="counter-container" class:shake-animation={isShaking}>
-        <button class="counter-btn" onclick={decrement}>-</button>
-        
-        <span class="counter-value" class:pop-animation={isPopping}>
-            {count}
-        </span>
-        
-        <button class="counter-btn" onclick={increment}>+</button>
-    </div>
-    
-    <button class="buy-btn" onclick={() => goto(`/payment?amount=${totalPrice}`)}>Buy Now For {totalPrice} &#8377; </button>
+	<!-- <label for="amount">Amount (INR):</label>
+	<input type="number" id="amount" name="amount" value="500" required />
+	<button>Pay Now</button> -->
+	<div class="counter-container" class:shake-animation={isShaking}>
+		<button class="counter-btn" onclick={decrement} >-</button>
+		
+		<span class="counter-value" class:pop-animation={isPopping}>
+			{count}
+		</span>
+		
+		<button class="counter-btn" onclick={increment}>+</button>
+	</div>
+	<form method="POST">
+		<input type="hidden" name="amount" bind:value={amount} />
+		<button class="buy-btn">Buy Now For {amount} &#8377; </button>
+	</form>
 </div>
 
 <style>
-    /* General Styling */
-    :global(body) {
+	    /* General Styling */
+		:global(body) {
         display: flex;
         justify-content: center;
         align-items: center;
