@@ -25,7 +25,7 @@
 				<tr>
 					<td>{order.order_id}</td>
 					<td>{order.status}</td>
-					<td>{order.amount/100/55}</td>
+					<td>{(order.amount/100)/55}</td>
 					<td>{(order.amount / 100).toFixed(2)} {order.currency}</td>
 					<td>{order.receipt}</td>
 					<td>{order.created_at}</td>
