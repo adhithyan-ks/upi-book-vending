@@ -1,38 +1,65 @@
-# sv
+# UPI Book Vending Machine
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This is a web application that simulates a book vending machine using UPI payments. It's built with SvelteKit and uses Razorpay for handling payments.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+*   Enter an amount to pay.
+*   Generates a Razorpay order.
+*   Redirects to a payment success page.
+*   Verifies the payment status.
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Tech Stack
 
-# create a new project in my-app
-npx sv create my-app
-```
+*   **Framework:** SvelteKit
+*   **Payment Gateway:** Razorpay
+*   **Database (for orders):** Supabase
 
-## Developing
+## Getting Started
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd upi-book-vending
+    ```
 
-```sh
-npm run dev
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+3.  **Set up environment variables:**
 
-## Building
+    Create a `.env` file in the root of the project:
+    ```bash
+    touch .env
+    ```
+    And add your Razorpay & Supabase API keys:
 
-To create a production version of your app:
+    ```
+    RAZORPAY_KEY_ID=<your_razorpay_key_id>
+    RAZORPAY_KEY_SECRET=<your_razorpay_key_secret>
 
-```sh
+    PUBLIC_SUPABASE_URL=<your_supabase_url>
+    PUBLIC_SUPABASE_ANON_KEY=<your_supabase_anon_key>
+    SUPABASE_SECRET_KEY=<your_supabase_secret_key>
+    ```
+
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+
+    The application will be available at `http://localhost:5173`.
+
+## Building for Production
+
+To create a production version of the app:
+
+```bash
 npm run build
 ```
 
 You can preview the production build with `npm run preview`.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+> **Note:** To deploy your app, you may need to install a SvelteKit adapter for your target environment.
