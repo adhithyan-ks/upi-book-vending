@@ -1,43 +1,34 @@
-import fs from 'fs';
-import { building } from '$app/environment';
-
-const DB_PATH = 'orders.json';
-
-// Initialize the JSON file if it doesn't exist.
-// The `building` check prevents this from running during the build process.
-if (!building && !fs.existsSync(DB_PATH)) {
-	fs.writeFileSync(DB_PATH, JSON.stringify([], null, 2));
-}
+// Import the new admin client
+import { supabaseAdmin } from './supabaseAdminClient';
 
 /**
- * @returns {Array<any>}
+ * Saves a newly created order to the Supabase database.
+ * @param {object} order - The order details.
  */
-export function getOrders() {
-	if (fs.existsSync(DB_PATH)) {
-		const data = fs.readFileSync(DB_PATH, 'utf-8');
-		return JSON.parse(data);
+export async function saveOrder(order) {
+	// Use the admin client to bypass RLS for this trusted server operation
+	const { error } = await supabaseAdmin.from('orders').insert([order]);
+
+	if (error) {
+		console.error('Supabase error saving order:', error);
+		throw new Error('Failed to save order to the database.');
 	}
-	return [];
 }
 
 /**
- * @param {any} order
+ * Updates an existing order in Supabase with new details.
+ * @param {string} orderId - The Razorpay order ID.
+ * @param {object} updates - An object with the fields to update.
  */
-export function saveOrder(order) {
-	const orders = getOrders();
-	orders.push(order);
-	fs.writeFileSync(DB_PATH, JSON.stringify(orders, null, 2));
-}
+export async function updateOrder(orderId, updates) {
+	// Use the admin client here as well
+	const { error } = await supabaseAdmin
+		.from('orders')
+		.update(updates)
+		.eq('order_id', orderId);
 
-/**
- * @param {string} orderId
- * @param {object} updates
- */
-export function updateOrder(orderId, updates) {
-	const orders = getOrders();
-	const orderIndex = orders.findIndex((o) => o.order_id === orderId);
-	if (orderIndex !== -1) {
-		orders[orderIndex] = { ...orders[orderIndex], ...updates };
-		fs.writeFileSync(DB_PATH, JSON.stringify(orders, null, 2));
+	if (error) {
+		console.error('Supabase error updating order:', error);
+		throw new Error('Failed to update order in the database.');
 	}
 }
