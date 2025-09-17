@@ -25,7 +25,7 @@ export const actions = {
 			// Save the created order to our JSON "database"
 			saveOrder({
 				order_id: order.id,
-				amount: order.amount,
+				amount: order.amount/100, // Convert back to rupees
 				currency: order.currency,
 				receipt: order.receipt,
 				status: 'created'
