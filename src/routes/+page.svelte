@@ -19,7 +19,7 @@
 				// This handler function is called after payment
 				handler: async (response) => {
 					try {
-						const res = await fetch('/verify-payment', {
+						const res = await fetch('/api/verify-payment', {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/json'
@@ -95,7 +95,7 @@
             triggerAnimation({ set value(v) { isShaking = v; } });
         }
     }
-    $inspect(amount);
+    // $inspect(amount);
 </script>
 
 <svelte:head>
