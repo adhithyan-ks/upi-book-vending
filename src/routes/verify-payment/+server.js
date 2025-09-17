@@ -18,9 +18,11 @@ export async function POST({ request }) {
 				payment_id: razorpay_payment_id
 			});
 			console.log('Payment verification successful');
+			console.log('Payment ID:', razorpay_payment_id);
 			return json({ status: 'ok' });
 		} else {
 			console.log('Payment verification failed');
+			console.log('Payment ID:', razorpay_payment_id);
 			return json({ status: 'verification_failed' }, { status: 400 });
 		}
 	} catch (error) {

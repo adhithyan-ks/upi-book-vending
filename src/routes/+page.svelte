@@ -13,8 +13,8 @@
 				key: PUBLIC_RAZORPAY_KEY_ID, // Your public key ID
 				amount: order.amount,
 				currency: order.currency,
-				name: 'SvelteKit Store',
-				description: 'Test Payment',
+				name: 'Record Book Store',
+				description: 'Test Payment - Robotic Arm',
 				order_id: order.id,
 				// This handler function is called after payment
 				handler: async (response) => {
@@ -95,6 +95,7 @@
             triggerAnimation({ set value(v) { isShaking = v; } });
         }
     }
+    $inspect(amount);
 </script>
 
 <svelte:head>
