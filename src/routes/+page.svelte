@@ -1,4 +1,5 @@
 <script>
+	import { enhance } from '$app/forms';
 	import { PUBLIC_RAZORPAY_KEY_ID } from '$env/static/public';
 
 	// The `form` prop contains the data returned from our form action. [cite: 188]
@@ -120,7 +121,7 @@
 		
 		<button class="counter-btn" onclick={increment}>+</button>
 	</div>
-	<form method="POST">
+	<form method="POST" use:enhance>
 		<input type="hidden" name="amount" bind:value={amount} />
 		<button class="buy-btn">Buy Now For {amount} &#8377; </button>
 	</form>
