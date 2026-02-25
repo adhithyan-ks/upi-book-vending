@@ -13,7 +13,7 @@ export async function POST({ request }) {
 
 		if (isValid) {
 			// Update the order status in our database
-			updateOrder(razorpay_order_id, {
+			await updateOrder(razorpay_order_id, {
 				status: 'paid',
 				payment_id: razorpay_payment_id
 			});

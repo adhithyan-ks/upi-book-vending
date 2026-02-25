@@ -23,7 +23,7 @@ export const actions = {
 			const order = await razorpay.orders.create(options);
 
 			// Save the created order to our JSON "database"
-			saveOrder({
+			await saveOrder({
 				order_id: order.id,
 				amount: order.amount,
 				currency: order.currency,
