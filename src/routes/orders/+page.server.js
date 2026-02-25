@@ -6,7 +6,8 @@ export async function load() {
 
 	const { data: orders, error } = await supabase
 		.from('orders') // The name of your table
-		.select('*'); // Select all columns
+		.select('*') // Select all columns
+		.order('created_at', { ascending: false }); // Sort descending by newest first
 
 	if (error) {
 		console.error('Error fetching orders:', error);
