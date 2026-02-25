@@ -1,8 +1,23 @@
 <script>
+	import { invalidateAll } from '$app/navigation';
 	let { data } = $props();
 
 	// Filter state
 	let dateFilter = $state('all'); // 'all', 'today', '7days', '30days'
+	let statusFilter = $state('all'); // 'all', 'paid', 'created'
+	let isRefreshing = $state(false);
+
+	async function handleRefresh() {
+		isRefreshing = true;
+		try {
+			await invalidateAll();
+		} finally {
+			// Small delay so the spin animation is visible even if local
+			setTimeout(() => {
+				isRefreshing = false;
+			}, 500);
+		}
+	}
 
 	// Helper to parse the timestamp format provided (e.g., 2026-02-24 07:09:38.36904+00)
 	function parsePostgresDate(dateStr) {
@@ -35,31 +50,45 @@
 
 	// Filter logic
 	let filteredOrders = $derived.by(() => {
-		if (dateFilter === 'all') return data.orders;
+		let result = data.orders;
 
-		const now = new Date();
-		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-		return data.orders.filter((order) => {
-			const orderDate = parsePostgresDate(order.created_at);
-			if (!orderDate) return false;
-
-			if (dateFilter === 'today') {
-				const orderDay = new Date(
-					orderDate.getFullYear(),
-					orderDate.getMonth(),
-					orderDate.getDate()
-				);
-				return orderDay.getTime() === today.getTime();
-			} else if (dateFilter === '7days') {
-				const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-				return orderDate >= sevenDaysAgo;
-			} else if (dateFilter === '30days') {
-				const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-				return orderDate >= thirtyDaysAgo;
+		// Status filter
+		if (statusFilter !== 'all') {
+			if (statusFilter === 'paid') {
+				result = result.filter((o) => o.status === 'paid' || o.status === 'captured');
+			} else {
+				result = result.filter((o) => o.status === statusFilter);
 			}
-			return true;
-		});
+		}
+
+		// Date filter
+		if (dateFilter !== 'all') {
+			const now = new Date();
+			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+			result = result.filter((order) => {
+				const orderDate = parsePostgresDate(order.created_at);
+				if (!orderDate) return false;
+
+				if (dateFilter === 'today') {
+					const orderDay = new Date(
+						orderDate.getFullYear(),
+						orderDate.getMonth(),
+						orderDate.getDate()
+					);
+					return orderDay.getTime() === today.getTime();
+				} else if (dateFilter === '7days') {
+					const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+					return orderDate >= sevenDaysAgo;
+				} else if (dateFilter === '30days') {
+					const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+					return orderDate >= thirtyDaysAgo;
+				}
+				return true;
+			});
+		}
+
+		return result;
 	});
 
 	// Derived statistics based on FILTERED orders
@@ -67,13 +96,19 @@
 
 	let totalRevenue = $derived(
 		filteredOrders.reduce((sum, order) => {
-			return sum + order.amount / 100;
+			if (order.status === 'paid' || order.status === 'captured') {
+				return sum + order.amount / 100;
+			}
+			return sum;
 		}, 0)
 	);
 
 	let totalItems = $derived(
 		filteredOrders.reduce((sum, order) => {
-			return sum + order.amount / 100 / 55;
+			if (order.status === 'paid' || order.status === 'captured') {
+				return sum + order.amount / 100 / 55;
+			}
+			return sum;
 		}, 0)
 	);
 </script>
@@ -94,6 +129,33 @@
 		</div>
 
 		<div class="controls fade-in">
+			<button
+				class="refresh-btn"
+				class:spinning={isRefreshing}
+				onclick={handleRefresh}
+				aria-label="Refresh orders"
+			>
+				<svg
+					width="18"
+					height="18"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l5.67-1.36" /></svg
+				>
+				<span>Refresh</span>
+			</button>
+			<div class="filter-group">
+				<label for="status-filter">Status:</label>
+				<select id="status-filter" bind:value={statusFilter}>
+					<option value="all">All</option>
+					<option value="paid">Paid</option>
+					<option value="created">Unpaid</option>
+				</select>
+			</div>
 			<div class="filter-group">
 				<label for="date-filter">Timeframe:</label>
 				<select id="date-filter" bind:value={dateFilter}>
@@ -198,6 +260,7 @@
 					<thead>
 						<tr>
 							<th>Order ID & Receipt</th>
+							<th>Payment ID</th>
 							<th>Date</th>
 							<th class="text-right">Quantity</th>
 							<th class="text-right">Amount</th>
@@ -210,6 +273,11 @@
 								<td>
 									<div class="cell-primary font-mono text-sm">{order.order_id || order.id}</div>
 									<div class="cell-secondary">{order.receipt || 'No receipt ID'}</div>
+								</td>
+								<td>
+									<div class="cell-primary font-mono text-sm" style="color: #64748b;">
+										{order.payment_id || 'N/A'}
+									</div>
 								</td>
 								<td>
 									<div class="cell-primary">{formatDateForDisplay(order.created_at)}</div>
@@ -226,7 +294,7 @@
 									<span
 										class="badge {order.status === 'created'
 											? 'badge-warning'
-											: order.status === 'paid'
+											: order.status === 'paid' || order.status === 'captured'
 												? 'badge-success'
 												: 'badge-neutral'}"
 									>
@@ -312,12 +380,61 @@
 		padding: 0.75rem 1.25rem;
 		border-radius: 16px;
 		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.refresh-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		background: #ffffff;
+		border: 1px solid #e2e8f0;
+		border-radius: 8px;
+		padding: 0.5rem 1rem;
+		color: #475569;
+		font-family: inherit;
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+	}
+
+	.refresh-btn:hover {
+		background: #f8fafc;
+		border-color: #cbd5e1;
+		color: #0f172a;
+	}
+
+	.refresh-btn:active {
+		transform: scale(0.97);
+	}
+
+	.refresh-btn svg {
+		transition: transform 0.3s;
+	}
+
+	.refresh-btn.spinning svg {
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.filter-group {
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
+		padding-left: 1rem;
+		border-left: 1px solid #e2e8f0;
 	}
 
 	.filter-group label {
@@ -589,11 +706,22 @@
 		.controls {
 			width: 100%;
 			box-sizing: border-box;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+			padding: 0.5rem 1rem;
+		}
+
+		.refresh-btn {
+			flex: 1;
+			justify-content: center;
 		}
 
 		.filter-group {
+			flex: 2;
 			justify-content: space-between;
 			width: 100%;
+			padding-left: 0;
+			border-left: none;
 		}
 
 		.filter-group select {
@@ -606,6 +734,18 @@
 	}
 
 	@media (max-width: 480px) {
+		.controls {
+			flex-direction: column;
+			align-items: stretch;
+		}
+		.refresh-btn {
+			padding: 0.75rem 1rem;
+		}
+		.filter-group {
+			border-top: 1px solid #e2e8f0;
+			padding-top: 0.5rem;
+		}
+
 		.table-container {
 			border-radius: 16px;
 		}
