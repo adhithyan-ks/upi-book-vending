@@ -65,6 +65,8 @@
 		}
 	});
 
+	//THIS IS HOME
+
 	// COUNTER
 	let count = $state(1);
 	let isShaking = $state(false);
