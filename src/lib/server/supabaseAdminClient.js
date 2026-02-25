@@ -1,5 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { SUPABASE_SECRET_KEY } from '$env/static/private'; // <- Correct import for .env
+import { env as publicEnv } from '$env/dynamic/public';   // PUBLIC_* vars live here
+import { env as privateEnv } from '$env/dynamic/private'; // non-PUBLIC vars live here
 
-export const supabaseAdmin = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY);
+// Dynamic imports so both values are resolved at RUNTIME on Vercel,
+// not baked in as undefined at build time like $env/static/* would do.
+export const supabaseAdmin = createClient(
+    publicEnv.PUBLIC_SUPABASE_URL,
+    privateEnv.SUPABASE_SECRET_KEY
+);
