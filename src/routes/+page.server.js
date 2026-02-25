@@ -1,6 +1,25 @@
 import { fail } from '@sveltejs/kit';
 import { razorpay } from '$lib/server/razorpay.js';
 import { saveOrder } from '$lib/server/database.js';
+import { supabase } from '$lib/supabaseClient.js';
+
+/** @type {import('./$types').PageServerLoad} */
+export async function load() {
+	const { data: recentOrders, error } = await supabase
+		.from('orders')
+		.select('*')
+		.order('created_at', { ascending: false })
+		.limit(5);
+
+	if (error) {
+		console.error('Error fetching recent orders:', error);
+		return { recentOrders: [] };
+	}
+
+	return {
+		recentOrders: recentOrders ?? []
+	};
+}
 
 /** @type {import('./$types').Actions} */
 export const actions = {
