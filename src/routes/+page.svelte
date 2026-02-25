@@ -62,183 +62,348 @@
 
 	// COUNTER
 	let count = $state(1);
-    let isShaking = $state(false);
-    let isPopping = $state(false);
+	let isShaking = $state(false);
+	let isPopping = $state(false);
 
-    const price = 55; // Price per item
-    // Define the minimum and maximum values for the counter
-    // These can be adjusted as needed
-    const minValue = 1;
-    const maxValue = 5;
-    let amount = $derived(count * price);
-    // A helper function to trigger animations by quickly toggling state
-    function triggerAnimation(animationStateSetter) {
-        animationStateSetter.value = true;
-        setTimeout(() => {
-            animationStateSetter.value = false;
-        }, 300); // Must match the animation duration in CSS
-    }
+	const price = 55; // Price per item
+	// Define the minimum and maximum values for the counter
+	// These can be adjusted as needed
+	const minValue = 1;
+	const maxValue = 5;
+	let amount = $derived(count * price);
+	// A helper function to trigger animations by quickly toggling state
+	function triggerAnimation(animationStateSetter) {
+		animationStateSetter.value = true;
+		setTimeout(() => {
+			animationStateSetter.value = false;
+		}, 300); // Must match the animation duration in CSS
+	}
 
-    function increment() {
-        if (count < maxValue) {
-            count++;
-            triggerAnimation({ set value(v) { isPopping = v; } });
-        } else {
-            triggerAnimation({ set value(v) { isShaking = v; } });
-        }
-    }
+	function increment() {
+		if (count < maxValue) {
+			count++;
+			triggerAnimation({
+				set value(v) {
+					isPopping = v;
+				}
+			});
+		} else {
+			triggerAnimation({
+				set value(v) {
+					isShaking = v;
+				}
+			});
+		}
+	}
 
-    function decrement() {
-        if (count > minValue) {
-            count--;
-            triggerAnimation({ set value(v) { isPopping = v; } });
-        } else {
-            triggerAnimation({ set value(v) { isShaking = v; } });
-        }
-    }
-    // $inspect(amount);
+	function decrement() {
+		if (count > minValue) {
+			count--;
+			triggerAnimation({
+				set value(v) {
+					isPopping = v;
+				}
+			});
+		} else {
+			triggerAnimation({
+				set value(v) {
+					isShaking = v;
+				}
+			});
+		}
+	}
+	// $inspect(amount);
 </script>
 
 <svelte:head>
 	<title>Razorpay Payment</title>
 	<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+		rel="stylesheet"
+	/>
 </svelte:head>
 
-<!-- <h1>Razorpay Payment Gateway Integration</h1> -->
+<div class="wrapper">
+	<div class="product-card">
+		<div class="header-section">
+			<h2>Record Book Store</h2>
+			<p class="subtitle">Robotic Arm Test</p>
+		</div>
 
+		<div class="counter-section">
+			<h3 class="input-label">Select Quantity</h3>
+			<div class="counter-container" class:shake-animation={isShaking}>
+				<button class="counter-btn" onclick={decrement} aria-label="Decrease quantity">
+					<svg
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg
+					>
+				</button>
 
-<div class="product-card">
-    <h2>Select Quantity</h2>
-	<!-- <label for="amount">Amount (INR):</label>
-	<input type="number" id="amount" name="amount" value="500" required />
-	<button>Pay Now</button> -->
-	<div class="counter-container" class:shake-animation={isShaking}>
-		<button class="counter-btn" onclick={decrement} >-</button>
-		
-		<span class="counter-value" class:pop-animation={isPopping}>
-			{count}
-		</span>
-		
-		<button class="counter-btn" onclick={increment}>+</button>
+				<span class="counter-value" class:pop-animation={isPopping}>
+					{count}
+				</span>
+
+				<button class="counter-btn" onclick={increment} aria-label="Increase quantity">
+					<svg
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg
+					>
+				</button>
+			</div>
+		</div>
+
+		<form method="POST" use:enhance>
+			<input type="hidden" name="amount" bind:value={amount} />
+			<button class="buy-btn">
+				<span>Pay Securely</span>
+				<span class="price-badge">&#8377; {amount}</span>
+			</button>
+		</form>
 	</div>
-	<form method="POST" use:enhance>
-		<input type="hidden" name="amount" bind:value={amount} />
-		<button class="buy-btn">Buy Now For {amount} &#8377; </button>
-	</form>
 </div>
 
 <style>
-	    /* General Styling */
-		:global(body) {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-        background-color: #f0f4f8;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+	:global(body) {
+		margin: 0;
+		padding: 0;
+		font-family:
+			'Inter',
+			system-ui,
+			-apple-system,
+			sans-serif;
+		background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+		min-height: 100vh;
+	}
 
-    /* Main Container */
-    .product-card {
-        background-color: #ffffff;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        padding: 40px;
-        text-align: center;
-        width: 320px;
-        overflow: hidden;
-    }
+	.wrapper {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		min-height: 100vh;
+		padding: 1rem;
+	}
 
-    h2 {
-        margin-top: 0;
-        color: #333;
-        font-size: 24px;
-    }
+	.product-card {
+		background: rgba(255, 255, 255, 0.9);
+		backdrop-filter: blur(10px);
+		border-radius: 24px;
+		padding: 2.5rem 2rem;
+		text-align: center;
+		width: 100%;
+		max-width: 400px;
+		box-shadow:
+			0 20px 40px rgba(0, 0, 0, 0.08),
+			0 1px 3px rgba(0, 0, 0, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.5);
+		transform: translateY(20px);
+		opacity: 0;
+		animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
 
-    /* Counter Styling */
-    .counter-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 30px 0;
-    }
-    
-    .counter-btn {
-        background-color: #e3eaf1;
-        border: none;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        font-size: 28px;
-        font-weight: bold;
-        color: #555;
-        cursor: pointer;
-        transition: background-color 0.3s, transform 0.2s;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+	.header-section {
+		margin-bottom: 2rem;
+	}
 
-    .counter-btn:hover {
-        background-color: #d1d9e6;
-    }
+	.header-section h2 {
+		color: #111827;
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin: 0 0 0.25rem;
+		letter-spacing: -0.025em;
+	}
 
-    .counter-btn:active {
-        transform: scale(0.9);
-    }
+	.subtitle {
+		color: #6b7280;
+		font-size: 0.875rem;
+		margin: 0;
+	}
 
-    .counter-value {
-        font-size: 48px;
-        font-weight: bold;
-        color: #007bff;
-        margin: 0 30px;
-        width: 60px; /* Fixed width to prevent layout shifts */
-        display: inline-block; /* Needed for transform to work properly */
-    }
+	.counter-section {
+		background: rgba(243, 244, 246, 0.5);
+		border-radius: 16px;
+		padding: 1.5rem;
+		margin-bottom: 2rem;
+		border: 1px solid rgba(229, 231, 235, 0.5);
+	}
 
-    /* Buy Button Styling */
-    .buy-btn {
-        background: linear-gradient(45deg, #007bff, #0056b3);
-        border: none;
-        border-radius: 12px;
-        color: white;
-        padding: 15px 30px;
-        font-size: 18px;
-        font-weight: bold;
-        cursor: pointer;
-        width: 100%;
-        transition: transform 0.2s, box-shadow 0.3s;
-        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
-    }
+	.input-label {
+		color: #374151;
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin: 0 0 1rem;
+	}
 
-    .buy-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 123, 255, 0.5);
-    }
-    
-    .buy-btn:active {
-        transform: translateY(0);
-    }
+	.counter-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 1.5rem;
+	}
 
-    /* Animations */
-    @keyframes pop {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.3); }
-        100% { transform: scale(1); }
-    }
+	.counter-btn {
+		background: white;
+		border: 1px solid #e5e7eb;
+		border-radius: 12px;
+		width: 44px;
+		height: 44px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		color: #374151;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+	}
 
-    .pop-animation {
-        animation: pop 0.3s ease-out;
-    }
+	.counter-btn:hover {
+		border-color: #d1d5db;
+		background: #f9fafb;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+	}
 
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-5px); }
-        75% { transform: translateX(5px); }
-    }
+	.counter-btn:active {
+		transform: translateY(0);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+	}
 
-    .shake-animation {
-        animation: shake 0.3s linear;
-    }
+	.counter-value {
+		font-size: 2.5rem;
+		font-weight: 700;
+		color: #111827;
+		min-width: 2ch;
+		display: inline-block;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.buy-btn {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		background: #111827;
+		color: white;
+		border: none;
+		border-radius: 9999px;
+		padding: 1.25rem 1.5rem;
+		width: 100%;
+		font-size: 1.125rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	}
+
+	.buy-btn:hover {
+		background: #1f2937;
+		transform: translateY(-2px);
+		box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+	}
+
+	.buy-btn:active {
+		transform: translateY(0);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+
+	.price-badge {
+		background: rgba(255, 255, 255, 0.25);
+		padding: 0.35rem 1rem;
+		border-radius: 9999px;
+		font-weight: 700;
+		font-size: 1.25rem;
+	}
+
+	/* Mobile Responsiveness */
+	@media (max-width: 480px) {
+		.product-card {
+			padding: 2rem 1.5rem;
+			border-radius: 20px;
+		}
+
+		.header-section h2 {
+			font-size: 1.25rem;
+		}
+
+		.counter-section {
+			padding: 1.25rem 1rem;
+		}
+
+		.counter-container {
+			gap: 1rem;
+		}
+
+		.counter-btn {
+			width: 40px;
+			height: 40px;
+		}
+
+		.counter-value {
+			font-size: 2rem;
+		}
+
+		.buy-btn {
+			padding: 1rem 1.25rem;
+			font-size: 1rem;
+		}
+
+		.price-badge {
+			font-size: 1.1rem;
+			padding: 0.25rem 0.75rem;
+		}
+	}
+
+	/* Animations */
+	@keyframes slideUpFade {
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+
+	@keyframes pop {
+		0% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.15);
+			color: #3b82f6;
+		}
+		100% {
+			transform: scale(1);
+		}
+	}
+
+	.pop-animation {
+		animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	}
+
+	@keyframes shake {
+		0%,
+		100% {
+			transform: translateX(0);
+		}
+		25% {
+			transform: translateX(-4px);
+		}
+		75% {
+			transform: translateX(4px);
+		}
+	}
+
+	.shake-animation {
+		animation: shake 0.3s linear;
+	}
 </style>
