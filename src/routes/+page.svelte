@@ -322,6 +322,7 @@
 		padding: 2.5rem 2rem;
 		text-align: center;
 		width: 100%;
+		box-sizing: border-box;
 		max-width: 400px;
 		box-shadow:
 			0 20px 40px rgba(0, 0, 0, 0.08),
