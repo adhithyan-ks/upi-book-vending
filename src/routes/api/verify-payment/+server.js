@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
 import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
 import { RAZORPAY_KEY_SECRET } from '$env/static/private';
-import { updateOrder } from '$lib/server/database.js';
+import { updateOrder, getOrder } from '$lib/server/database.js';
+import { publishBlink } from '$lib/server/mqtt.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
@@ -17,8 +18,22 @@ export async function POST({ request }) {
 				status: 'paid',
 				payment_id: razorpay_payment_id
 			});
+
 			console.log('Payment verification successful');
 			console.log('Payment ID:', razorpay_payment_id);
+
+			try {
+				// Fetch the order to get the amount for MQTT hook
+				const order = await getOrder(razorpay_order_id);
+				if (order && order.amount) {
+					// order.amount is in paise, so divide by 100 to get INR
+					const amountInINR = order.amount / 100;
+					publishBlink(amountInINR);
+				}
+			} catch (err) {
+				console.error('Failed to trigger blink:', err);
+			}
+
 			return json({ status: 'ok' });
 		} else {
 			console.log('Payment verification failed');
