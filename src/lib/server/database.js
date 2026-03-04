@@ -32,3 +32,23 @@ export async function updateOrder(orderId, updates) {
 		throw new Error('Failed to update order in the database.');
 	}
 }
+
+/**
+ * Retrieves an existing order from Supabase.
+ * @param {string} orderId - The Razorpay order ID.
+ * @returns {object} The order details.
+ */
+export async function getOrder(orderId) {
+	const { data, error } = await supabaseAdmin
+		.from('orders')
+		.select('*')
+		.eq('order_id', orderId)
+		.single();
+
+	if (error) {
+		console.error('Supabase error fetching order:', error);
+		throw new Error('Failed to fetch order from the database.');
+	}
+
+	return data;
+}
