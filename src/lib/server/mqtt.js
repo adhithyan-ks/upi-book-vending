@@ -1,8 +1,9 @@
 import mqtt from 'mqtt';
+import { MQTT_URL, MQTT_USERNAME, MQTT_PASSWORD } from '$env/static/private';
 
-const client = mqtt.connect('mqtts://ba7b661ecd7b4b1f835b21527023b97a.s1.eu.hivemq.cloud:8883', {
-    username: 'espclient',
-    password: 'client@ESP8266'
+const client = mqtt.connect(MQTT_URL, {
+    username: MQTT_USERNAME,
+    password: MQTT_PASSWORD
 });
 
 client.on('connect', () => {
